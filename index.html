@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftMove | Transportation ERP + CRM</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+    <div id="app" class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i data-lucide="truck"></i>
+                    <span class="company-name">SwiftMove</span>
+                </div>
+                <button id="sidebar-toggle" class="icon-btn">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-view="dashboard">
+                        <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
+                    </li>
+                    <li class="nav-section">Management</li>
+                    <li class="nav-item" data-view="customers">
+                        <i data-lucide="users"></i> <span>Customers (CRM)</span>
+                    </li>
+                    <li class="nav-item" data-view="orders">
+                        <i data-lucide="shopping-cart"></i> <span>Orders</span>
+                    </li>
+                    <li class="nav-item" data-view="shipments">
+                        <i data-lucide="package"></i> <span>Shipments</span>
+                    </li>
+                    <li class="nav-item" data-view="fleet">
+                        <i data-lucide="truck"></i> <span>Fleet</span>
+                    </li>
+                    <li class="nav-item" data-view="drivers">
+                        <i data-lucide="user-square-2"></i> <span>Drivers</span>
+                    </li>
+                    <li class="nav-section">Operations</li>
+                    <li class="nav-item" data-view="tracking">
+                        <i data-lucide="map-pin"></i> <span>Routes & Tracking</span>
+                    </li>
+                    <li class="nav-item" data-view="warehouse">
+                        <i data-lucide="warehouse"></i> <span>Warehouse</span>
+                    </li>
+                    <li class="nav-section">Financials</li>
+                    <li class="nav-item" data-view="invoices">
+                        <i data-lucide="file-text"></i> <span>Invoices</span>
+                    </li>
+                    <li class="nav-item" data-view="payments">
+                        <i data-lucide="credit-card"></i> <span>Payments</span>
+                    </li>
+                    <li class="nav-item" data-view="documents">
+                        <i data-lucide="printer"></i> <span>Bills &amp; Challan</span>
+                    </li>
+                    <li class="nav-section">System</li>
+                    <li class="nav-item" data-view="analytics">
+                        <i data-lucide="bar-chart-3"></i> <span>Analytics</span>
+                    </li>
+                    <li class="nav-item" data-view="tickets">
+                        <i data-lucide="ticket"></i> <span>Support Tickets</span>
+                    </li>
+                    <li class="nav-item" data-view="settings">
+                        <i data-lucide="settings"></i> <span>Settings</span>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="mobile-menu-toggle" class="icon-btn mobile-only" title="Toggle Menu">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <h2 id="page-title">Dashboard Overview</h2>
+                </div>
+                <div class="header-right">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <div class="notification-bell">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&background=0284c7&color=fff" alt="Profile">
+                        <div class="user-info">
+                            <span class="user-name">John Doe</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main id="main-content" class="content-area">
+                <!-- Content will be injected here by script.js -->
+                <div class="skeleton-loader">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+            </main>
+
+            <footer class="footer">
+                <p>&copy; <span id="footer-year"></span> <span class="company-name-text">SwiftMove Logistics ERP</span>. All rights reserved.</p>
+                <div class="footer-meta">
+                    <span id="support-email-text">support@swiftmove.com</span>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Notification Panel (Hidden by default) -->
+        <div id="notification-panel" class="side-panel">
+            <div class="panel-header">
+                <h3>Notifications</h3>
+                <button class="close-panel"><i data-lucide="x"></i></button>
+            </div>
+            <div class="notification-list">
+                <!-- Notifications injected here -->
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="modal-container" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="modal-title">Modal Title</h3>
+                    <button class="close-modal"><i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body" id="modal-content">
+                    <!-- Modal content injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary close-modal">Cancel</button>
+                    <button class="btn btn-primary" id="modal-submit">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
