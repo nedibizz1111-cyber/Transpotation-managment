@@ -1182,19 +1182,22 @@ textarea {
 /* ========================================
    Notification Panel
    ======================================== */
+
+/* ── Base (Desktop) ── */
 .side-panel {
     position: fixed;
     top: 0;
     right: 0;
     height: 100vh;
-    width: 320px;
-    max-width: calc(100vw - 40px);
+    width: 380px;
+    max-width: calc(100vw - 20px);
     background: var(--bg-card);
     border-left: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
     z-index: 400;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     transform: translateX(100%);
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1207,9 +1210,84 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 20px;
+    padding: 0 20px;
     border-bottom: 1px solid var(--border-color);
     height: var(--header-height);
+    flex-shrink: 0;
+}
+
+/* Notification List — fills remaining height and scrolls */
+.notification-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.notification-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+/* ── Tablet (768px and below) ──
+   Panel becomes a bottom sheet sliding up */
+@media (max-width: 768px) {
+    .side-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 82vh;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        border-radius: 20px 20px 0 0;
+        /* Override: slide up from bottom instead of from right */
+        transform: translateY(100%);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .side-panel.open {
+        transform: translateY(0);
+    }
+
+    /* Drag handle pill on tablet/mobile */
+    .panel-header::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: var(--border-color);
+        border-radius: 2px;
+    }
+
+    .panel-header {
+        position: relative;
+        justify-content: space-between;
+        padding: 0 20px;
+    }
+}
+
+/* ── Mobile (480px and below) ──
+   Taller sheet, takes more screen */
+@media (max-width: 480px) {
+    .side-panel {
+        height: 90vh;
+        border-radius: 16px 16px 0 0;
+    }
 }
 
 /* ========================================

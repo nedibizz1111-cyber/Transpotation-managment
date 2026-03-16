@@ -79,10 +79,29 @@ const UI = {
             this.toggleTheme();
         });
 
+        // Notification Bell Toggle
+        const notifBell = document.querySelector('.notification-bell');
+        if (notifBell) {
+            notifBell.addEventListener('click', () => this.toggleNotificationPanel());
+        }
+
+        // Close Notification Panel
+        document.querySelector('.close-panel').addEventListener('click', () => {
+            this.closeNotificationPanel();
+        });
+
         // Modal Close
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', () => this.closeModal());
         });
+
+        // Recalculate notifications on resize if panel is open
+window.addEventListener('resize', () => {
+    const panel = document.getElementById('notification-panel');
+    if (panel && panel.classList.contains('open')) {
+        UI.renderNotifications();
+    }
+});
     },
 
     toggleMobileMenu() {
@@ -160,6 +179,308 @@ const UI = {
         document.getElementById('modal-container').classList.add('hidden');
     },
 
+    toggleNotificationPanel() {
+    const panel = document.getElementById('notification-panel');
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+        this.closeNotificationPanel();
+    } else {
+        this.openNotificationPanel();
+    }
+},
+
+closeNotificationPanel() {
+    document.getElementById('notification-panel').classList.remove('open');
+    const overlay = document.querySelector('.notif-overlay');
+    if (overlay) overlay.style.display = 'none';
+},
+
+openNotificationPanel() {
+    const panel = document.getElementById('notification-panel');
+    panel.classList.add('open');
+    
+    // Wait for panel to be visible, then calculate
+    setTimeout(() => {
+        this.renderNotifications();
+    }, 50); // small delay so panel height is measurable
+
+    let overlay = document.querySelector('.notif-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'notif-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:399;';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => this.closeNotificationPanel());
+    }
+    overlay.style.display = 'block';
+},
+
+renderNotifications() {
+    const notifications = [
+        {
+            id: 1, type: 'order', icon: 'shopping-cart', color: '#0284c7',
+            bg: 'rgba(2,132,199,0.1)',
+            title: 'New Booking #ORD-7742',
+            desc: 'Tesla Motors booked a Heavy Machinery shipment — Palo Alto → Austin.',
+            time: '5 mins ago', read: false
+        },
+        {
+            id: 2, type: 'shipment', icon: 'package', color: '#10b981',
+            bg: 'rgba(16,185,129,0.1)',
+            title: 'Shipment #SHP-1290 Delivered',
+            desc: 'Driver Mark Wilson successfully delivered cargo to Seattle depot.',
+            time: '1 hour ago', read: false
+        },
+        {
+            id: 3, type: 'payment', icon: 'credit-card', color: '#f59e0b',
+            bg: 'rgba(245,158,11,0.1)',
+            title: 'Payment Received — $12,400',
+            desc: 'Apple Inc. cleared Invoice #INV-99011 via bank transfer.',
+            time: '3 hours ago', read: true
+        },
+        {
+            id: 4, type: 'alert', icon: 'alert-triangle', color: '#ef4444',
+            bg: 'rgba(239,68,68,0.1)',
+            title: 'Truck #TX-9901 — Service Due',
+            desc: 'Volvo FH16 is due for scheduled maintenance within 500 km.',
+            time: '5 hours ago', read: true
+        },
+        {
+            id: 5, type: 'ticket', icon: 'ticket', color: '#8b5cf6',
+            bg: 'rgba(139,92,246,0.1)',
+            title: 'Support Ticket #TCK-0092 Opened',
+            desc: 'Global Corp reported a delayed shipment near Chicago. Priority: High.',
+            time: 'Yesterday', read: true
+        },
+        {
+            id: 6, type: 'driver', icon: 'user-check', color: '#0ea5e9',
+            bg: 'rgba(14,165,233,0.1)',
+            title: 'Driver Sarah Jenkins — Available',
+            desc: 'Sarah has completed her last trip and is now ready for new assignment.',
+            time: 'Yesterday', read: true
+        },
+        {
+            id: 7, type: 'invoice', icon: 'file-text', color: '#f59e0b',
+            bg: 'rgba(245,158,11,0.1)',
+            title: 'Invoice #INV-99012 Overdue',
+            desc: 'Tesla Motors — $8,206.50 payment is overdue by 3 days.',
+            time: '2 days ago', read: true
+        }
+    ];
+
+    // ── Dynamic fit calculation ──────────────────────────────
+    const panel = document.getElementById('notification-panel');
+    const panelHeight = panel.offsetHeight;
+
+    const HEADER_H     = 68;  // panel title bar
+    const SUBHEADER_H  = 44;  // "2 Unread / Mark all read" row
+    const ITEM_H       = 90;  // approximate height per notification item
+    const BTN_H        = 56;  // "View more" button area
+    const HINT_H       = 36;  // bounce hint arrow area
+    const BUFFER       = 12;  // breathing room
+
+    const availableH = panelHeight - HEADER_H - SUBHEADER_H - BTN_H - HINT_H - BUFFER;
+    const fitCount   = Math.max(1, Math.floor(availableH / ITEM_H));
+    const visibleCount = Math.min(fitCount, notifications.length);
+
+    const visible = notifications.slice(0, visibleCount);
+    const hidden  = notifications.slice(visibleCount);
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    // Store for resize use
+    this._allNotifications = notifications;
+
+    const list = document.querySelector('.notification-list');
+    list.innerHTML = `
+        <!-- Sticky header -->
+        <div style="
+            padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0;
+            background: var(--bg-card); z-index: 2; flex-shrink: 0;">
+            <span id="notif-unread-label" style="
+                font-size: 0.78rem; font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase; letter-spacing: 0.05em;">
+                ${unreadCount} Unread
+            </span>
+            <button onclick="UI.markAllRead()" style="
+                font-size: 0.78rem; font-weight: 600;
+                color: var(--primary); background: none;
+                border: none; cursor: pointer; padding: 4px 0;">
+                Mark all read
+            </button>
+        </div>
+
+        <!-- Visible notifications -->
+        <div id="notif-visible-list">
+            ${visible.map(n => UI.renderNotifItem(n)).join('')}
+
+            <!-- Bounce hint — only if there are hidden ones -->
+            ${hidden.length > 0 ? `
+            <div id="scroll-hint" style="
+                display: flex; flex-direction: column; align-items: center;
+                padding: 8px 0 4px; gap: 3px;">
+                <span style="
+                    font-size: 0.72rem; color: var(--text-muted);
+                    font-weight: 600; letter-spacing: 0.04em;">
+                    ${hidden.length} more below
+                </span>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+                    <i data-lucide="chevron-down" style="width:15px;height:15px;color:var(--primary);"></i>
+                    <i data-lucide="chevron-down" style="width:15px;height:15px;color:var(--primary);margin-top:-7px;opacity:0.4;"></i>
+                </div>
+            </div>` : ''}
+        </div>
+
+        <!-- Hidden notifications -->
+        ${hidden.length > 0 ? `
+        <div id="notif-hidden-list" style="display:none;">
+            ${hidden.map(n => UI.renderNotifItem(n)).join('')}
+        </div>
+
+        <!-- Sticky View More button -->
+        <div id="view-all-btn-wrapper" style="
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            position: sticky; bottom: 0;
+            background: var(--bg-card); z-index: 2; flex-shrink: 0;">
+            <button onclick="UI.showAllNotifications()" style="
+                width: 100%; padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(var(--primary-rgb), 0.2);
+                background: rgba(var(--primary-rgb), 0.06);
+                color: var(--primary);
+                font-size: 0.82rem; font-weight: 600;
+                cursor: pointer;
+                display: flex; align-items: center;
+                justify-content: center; gap: 6px;
+                transition: background 0.2s ease;"
+                onmouseover="this.style.background='rgba(var(--primary-rgb),0.14)'"
+                onmouseout="this.style.background='rgba(var(--primary-rgb),0.06)'">
+                <i data-lucide="chevrons-down" style="width:15px;height:15px;"></i>
+                View ${hidden.length} more notification${hidden.length > 1 ? 's' : ''}
+            </button>
+        </div>` : ''}
+    `;
+
+    // Inject bounce animation once
+    if (!document.getElementById('notif-bounce-style')) {
+        const s = document.createElement('style');
+        s.id = 'notif-bounce-style';
+        s.textContent = `
+            @keyframes bounce-hint {
+                0%, 100% { transform: translateY(0);   opacity: 1;   }
+                50%       { transform: translateY(5px); opacity: 0.5; }
+            }
+            #scroll-hint { animation: bounce-hint 1.8s ease-in-out infinite; }
+        `;
+        document.head.appendChild(s);
+    }
+
+    lucide.createIcons();
+},
+
+renderNotifItem(n) {
+    return `
+        <div class="notif-item ${n.read ? '' : 'notif-unread'}"
+            data-id="${n.id}" style="
+            display: flex; gap: 14px; padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer; transition: background 0.15s ease;
+            background: ${n.read ? 'transparent' : 'rgba(var(--primary-rgb), 0.03)'};
+            position: relative;"
+            onmouseover="this.style.background='rgba(var(--primary-rgb),0.05)'"
+            onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(var(--primary-rgb), 0.03)'}'">
+            ${!n.read ? `
+            <div style="
+                position:absolute; top:18px; right:16px;
+                width:8px; height:8px;
+                background:var(--primary); border-radius:50%;">
+            </div>` : ''}
+            <div style="
+                width:40px; height:40px; min-width:40px;
+                border-radius:50%;
+                background:${n.bg}; color:${n.color};
+                display:flex; align-items:center;
+                justify-content:center; margin-top:2px;">
+                <i data-lucide="${n.icon}" style="width:18px;height:18px;"></i>
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div style="
+                    font-size:0.85rem;
+                    font-weight:${n.read ? '500' : '700'};
+                    color:var(--text-main);
+                    line-height:1.3; margin-bottom:4px;">
+                    ${n.title}
+                </div>
+                <div style="
+                    font-size:0.78rem; color:var(--text-muted);
+                    line-height:1.4; margin-bottom:6px;">
+                    ${n.desc}
+                </div>
+                <div style="
+                    font-size:0.72rem; color:var(--text-muted);
+                    font-weight:600;">
+                    ${n.time}
+                </div>
+            </div>
+        </div>
+    `;
+},
+
+showAllNotifications() {
+    const hidden     = document.getElementById('notif-hidden-list');
+    const btnWrapper = document.getElementById('view-all-btn-wrapper');
+    const scrollHint = document.getElementById('scroll-hint');
+
+    // Fade out scroll hint
+    if (scrollHint) {
+        scrollHint.style.transition = 'opacity 0.2s ease';
+        scrollHint.style.opacity = '0';
+        setTimeout(() => scrollHint.remove(), 200);
+    }
+
+    // Slide in hidden items
+    if (hidden) {
+        hidden.style.display = 'block';
+        hidden.style.opacity = '0';
+        hidden.style.transform = 'translateY(10px)';
+        hidden.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => {
+            hidden.style.opacity = '1';
+            hidden.style.transform = 'translateY(0)';
+        }, 10);
+    }
+
+    // Fade out button
+    if (btnWrapper) {
+        btnWrapper.style.transition = 'opacity 0.2s ease';
+        btnWrapper.style.opacity = '0';
+        setTimeout(() => btnWrapper.remove(), 200);
+    }
+
+    lucide.createIcons();
+},
+
+markAllRead() {
+    document.querySelectorAll('.notif-unread').forEach(el => {
+        el.style.background = 'transparent';
+        el.classList.remove('notif-unread');
+        el.querySelectorAll('div').forEach(d => {
+            if (d.style.width === '8px' && d.style.height === '8px') d.remove();
+        });
+    });
+
+    const badge = document.querySelector('.notification-bell .badge');
+    if (badge) badge.style.display = 'none';
+
+    const label = document.getElementById('notif-unread-label');
+    if (label) label.textContent = '0 Unread';
+
+    this.showToast('All notifications marked as read', 'success');
+},
     showToast(message, type = 'success') {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
