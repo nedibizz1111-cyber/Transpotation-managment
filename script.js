@@ -123,6 +123,499 @@ window.addEventListener('resize', () => {
 });
     },
 
+    submitNewBooking() {
+    const customer = document.getElementById('order-customer')?.value;
+    const cargo    = document.getElementById('order-cargo')?.value;
+    const origin   = document.getElementById('order-origin')?.value?.trim();
+    const dest     = document.getElementById('order-dest')?.value?.trim();
+    const date     = document.getElementById('order-date')?.value;
+    const weight   = document.getElementById('order-weight')?.value;
+    const notes    = document.getElementById('order-notes')?.value;
+
+    // ── Validation ──────────────────────────────────────────
+    if (!customer || customer === '') {
+        this.showToast('⚠️ Please select a customer!', 'error');
+        // Highlight the field
+        document.getElementById('order-customer')
+            .style.borderColor = 'var(--danger)';
+        return;
+    }
+
+    if (!cargo || cargo === '') {
+        this.showToast('⚠️ Please select a cargo type!', 'error');
+        document.getElementById('order-cargo')
+            .style.borderColor = 'var(--danger)';
+        return;
+    }
+
+    if (!origin || origin === '') {
+        this.showToast('⚠️ Please enter origin city!', 'error');
+        document.getElementById('order-origin')
+            .style.borderColor = 'var(--danger)';
+        return;
+    }
+
+    if (!dest || dest === '') {
+        this.showToast('⚠️ Please enter destination city!', 'error');
+        document.getElementById('order-dest')
+            .style.borderColor = 'var(--danger)';
+        return;
+    }
+
+    if (!date || date === '') {
+        this.showToast('⚠️ Please set a pickup date!', 'error');
+        document.getElementById('order-date')
+            .style.borderColor = 'var(--danger)';
+        return;
+    }
+
+    // ── All good — generate order ────────────────────────────
+    const newOrderId = '#ORD-' + (Math.floor(Math.random() * 900) + 7743);
+
+    this.closeModal();
+
+    // Toast sequence
+    this.showToast(
+        `✅ Booking ${newOrderId} created successfully!`,
+        'success'
+    );
+    setTimeout(() => {
+        this.showToast(
+            `📦 ${cargo} confirmed for ${customer}`,
+            'success'
+        );
+    }, 1000);
+    setTimeout(() => {
+        this.showToast(
+            `🗓 ${origin} → ${dest} · Pickup: ${new Date(date)
+                .toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                })}`,
+            'success'
+        );
+    }, 2000);
+},
+
+    openAssignTruck(orderId, customer, route, cargo) {
+    const content = `
+        <!-- Order Summary Banner -->
+        <div style="
+            background: linear-gradient(135deg, rgba(2,132,199,0.08), rgba(14,165,233,0.04));
+            border: 1px solid rgba(2,132,199,0.2);
+            border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);
+                        text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
+                        Order
+                    </div>
+                    <div style="font-weight:700;font-size:1rem;color:var(--primary);">#${orderId}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);
+                        text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
+                        Customer
+                    </div>
+                    <div style="font-weight:600;font-size:0.88rem;">${customer}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);
+                        text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
+                        Route
+                    </div>
+                    <div style="font-weight:600;font-size:0.88rem;">${route}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);
+                        text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
+                        Cargo
+                    </div>
+                    <div style="font-weight:600;font-size:0.88rem;">${cargo}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: Select Truck -->
+        <div style="margin-bottom:24px;">
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text-main);
+                text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">
+                Step 1 — Select Available Truck
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;" id="truck-list">
+
+                <!-- Truck 1 — Available -->
+                <div class="truck-option" id="truck-TX9901" onclick="UI.selectTruck('TX9901')" style="
+                    border: 2px solid var(--border-color);
+                    border-radius: 12px; padding: 14px 16px;
+                    cursor: pointer; transition: all 0.2s ease;
+                    display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <div style="width:44px;height:44px;border-radius:10px;
+                        background:rgba(16,185,129,0.1);color:var(--success);
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i data-lucide="truck" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <strong style="font-size:0.92rem;">Truck #TX-1022</strong>
+                            <span class="badge-status bg-delivered">Available</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">
+                            Scania R500 · 20T capacity · Last service: Mar 10
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:0.78rem;color:var(--text-muted);">Driver</div>
+                        <div style="font-size:0.85rem;font-weight:600;">Sarah Jenkins</div>
+                    </div>
+                    <div id="check-TX9901" style="display:none;
+                        width:24px;height:24px;border-radius:50%;
+                        background:var(--success);color:white;
+                        align-items:center;justify-content:center;flex-shrink:0;">
+                        <i data-lucide="check" style="width:14px;height:14px;"></i>
+                    </div>
+                </div>
+
+                <!-- Truck 2 — In Transit (disabled) -->
+                <div style="
+                    border: 2px solid var(--border-color);
+                    border-radius: 12px; padding: 14px 16px;
+                    opacity: 0.5; cursor: not-allowed;
+                    display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <div style="width:44px;height:44px;border-radius:10px;
+                        background:rgba(14,165,233,0.1);color:var(--info);
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i data-lucide="truck" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <strong style="font-size:0.92rem;">Truck #TX-9901</strong>
+                            <span class="badge-status bg-transit">In Transit</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">
+                            Volvo FH16 · 25T capacity · En route to Seattle
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:0.78rem;color:var(--text-muted);">Driver</div>
+                        <div style="font-size:0.85rem;font-weight:600;">Mark Wilson</div>
+                    </div>
+                </div>
+
+                <!-- Truck 3 — Available -->
+                <div class="truck-option" id="truck-TX3045" onclick="UI.selectTruck('TX3045')" style="
+                    border: 2px solid var(--border-color);
+                    border-radius: 12px; padding: 14px 16px;
+                    cursor: pointer; transition: all 0.2s ease;
+                    display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <div style="width:44px;height:44px;border-radius:10px;
+                        background:rgba(16,185,129,0.1);color:var(--success);
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i data-lucide="truck" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <strong style="font-size:0.92rem;">Truck #TX-3045</strong>
+                            <span class="badge-status bg-delivered">Available</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">
+                            MAN TGX · 18T capacity · Last service: Mar 14
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:0.78rem;color:var(--text-muted);">Driver</div>
+                        <div style="font-size:0.85rem;font-weight:600;">Raj Patel</div>
+                    </div>
+                    <div id="check-TX3045" style="display:none;
+                        width:24px;height:24px;border-radius:50%;
+                        background:var(--success);color:white;
+                        align-items:center;justify-content:center;flex-shrink:0;">
+                        <i data-lucide="check" style="width:14px;height:14px;"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Step 2: Pickup Date & Notes -->
+        <div style="margin-bottom:8px;">
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text-main);
+                text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">
+                Step 2 — Confirm Details
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Pickup Date *</label>
+                    <input type="date" id="assign-pickup-date"
+                        value="${new Date().toISOString().slice(0,10)}">
+                </div>
+                <div class="form-group">
+                    <label>Est. Delivery Date</label>
+                    <input type="date" id="assign-delivery-date">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Special Instructions</label>
+                <textarea id="assign-notes" placeholder="e.g. Handle with care, fragile items, temperature sensitive..." style="min-height:70px;"></textarea>
+            </div>
+        </div>
+
+        <!-- Assign Button -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="confirm-assign-btn"
+                onclick="UI.confirmAssignTruck('${orderId}','${customer}')"
+                style="flex:1;justify-content:center;min-width:160px;">
+                <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+                Confirm Assignment
+            </button>
+            <button class="btn btn-secondary" onclick="UI.closeModal()"
+                style="min-width:100px;justify-content:center;">
+                Cancel
+            </button>
+        </div>
+    `;
+
+    this.openModal(`Assign Truck — #${orderId}`, content, false);
+    lucide.createIcons();
+
+    // Store selected truck in state
+    this._selectedTruck = null;
+},
+
+selectTruck(truckId) {
+    // Deselect all
+    document.querySelectorAll('.truck-option').forEach(el => {
+        el.style.borderColor = 'var(--border-color)';
+        el.style.background = 'transparent';
+    });
+    document.querySelectorAll('[id^="check-"]').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // Select clicked one
+    const selected = document.getElementById(`truck-${truckId}`);
+    if (selected) {
+        selected.style.borderColor = 'var(--success)';
+        selected.style.background = 'rgba(16,185,129,0.04)';
+    }
+
+    // Show checkmark
+    const check = document.getElementById(`check-${truckId}`);
+    if (check) check.style.display = 'flex';
+
+    // Store selection
+    this._selectedTruck = truckId;
+},
+
+confirmAssignTruck(orderId, customer) {
+    if (!this._selectedTruck) {
+        this.showToast('Please select a truck first!', 'error');
+        return;
+    }
+
+    const pickupDate = document.getElementById('assign-pickup-date')?.value;
+    if (!pickupDate) {
+        this.showToast('Please set a pickup date!', 'error');
+        return;
+    }
+
+    const truckNames = {
+        'TX9901': 'Truck #TX-9901 (Volvo FH16)',
+        'TX1022': 'Truck #TX-1022 (Scania R500)',
+        'TX3045': 'Truck #TX-3045 (MAN TGX)'
+    };
+
+    this.closeModal();
+
+    // Success toast sequence
+    this.showToast(
+        `✅ ${truckNames[this._selectedTruck]} assigned to #${orderId}`,
+        'success'
+    );
+
+    setTimeout(() => {
+        this.showToast(
+            `📨 Dispatch notification sent to ${customer}`,
+            'success'
+        );
+    }, 1000);
+
+    setTimeout(() => {
+        this.showToast(
+            `🗓 Pickup scheduled for ${new Date(pickupDate).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})}`,
+            'success'
+        );
+    }, 2000);
+
+    // Update the button in the table to show "In Transit"
+    this._selectedTruck = null;
+},
+
+trackingModalContent(shipId, customer, route) {
+    return `
+        <div style="text-align:center;padding:12px 0 20px;">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);
+                text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
+                Live Tracking
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:var(--primary);">#${shipId}</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">${customer} · ${route}</div>
+        </div>
+
+        <!-- Fake map -->
+        <div style="
+            height:180px;border-radius:12px;
+            background:linear-gradient(135deg,#e0f2fe,#f0f9ff);
+            border:1px solid var(--border-color);
+            display:flex;align-items:center;justify-content:center;
+            position:relative;overflow:hidden;margin-bottom:20px;">
+            <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.15em;
+                color:var(--text-muted);position:absolute;top:12px;">LIVE MAP</div>
+            <div style="text-align:center;z-index:2;position:relative;">
+                <i data-lucide="truck" style="color:var(--primary);width:40px;height:40px;"></i>
+            </div>
+            <div style="position:absolute;width:40px;height:40px;
+                background:rgba(2,132,199,0.2);border-radius:50%;
+                animation:pulse 2s infinite;
+                top:50%;left:50%;transform:translate(-50%,-50%);">
+            </div>
+        </div>
+
+        <!-- Telemetry -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            ${[
+                {label:'Speed',   value:'68',  unit:'mph'},
+                {label:'Fuel',    value:'82',  unit:'%'},
+                {label:'ETA',     value:'14',  unit:'hrs'},
+            ].map(s => `
+                <div style="text-align:center;padding:14px 10px;
+                    background:var(--bg-main);border-radius:10px;
+                    border:1px solid var(--border-color);">
+                    <div style="font-size:0.7rem;font-weight:700;
+                        color:var(--text-muted);text-transform:uppercase;">${s.label}</div>
+                    <div style="font-size:1.4rem;font-weight:700;margin-top:4px;">
+                        ${s.value}<span style="font-size:0.75rem;font-weight:400;"> ${s.unit}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- Progress -->
+        <div style="margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;
+                font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">
+                <span>750 miles covered</span>
+                <span>250 miles remaining</span>
+            </div>
+            <div style="height:8px;background:var(--border-color);
+                border-radius:4px;overflow:hidden;">
+                <div style="width:75%;height:100%;
+                    background:linear-gradient(90deg,var(--primary),#0ea5e9);
+                    border-radius:4px;"></div>
+            </div>
+        </div>
+        <style>
+            @keyframes pulse {
+                0%   { transform:translate(-50%,-50%) scale(1); opacity:0.8; }
+                100% { transform:translate(-50%,-50%) scale(2.5); opacity:0; }
+            }
+        </style>
+    `;
+},
+
+orderDetailsContent(orderId, customer, route, cargo, status) {
+    const statusClass = {
+        'Delivered': 'bg-delivered',
+        'In Transit': 'bg-transit',
+        'Pending': 'bg-pending'
+    }[status] || 'bg-pending';
+
+    return `
+        <!-- Status Banner -->
+        <div style="display:flex;align-items:center;justify-content:space-between;
+            flex-wrap:wrap;gap:12px;margin-bottom:24px;
+            padding:16px;border-radius:12px;
+            background:var(--bg-main);border:1px solid var(--border-color);">
+            <div>
+                <div style="font-size:0.72rem;font-weight:700;
+                    color:var(--text-muted);text-transform:uppercase;
+                    letter-spacing:0.05em;margin-bottom:4px;">Order ID</div>
+                <div style="font-size:1.1rem;font-weight:700;
+                    color:var(--primary);">#${orderId}</div>
+            </div>
+            <span class="badge-status ${statusClass}"
+                style="padding:6px 14px;font-size:0.8rem;">
+                ${status}
+            </span>
+        </div>
+
+        <!-- Details Grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+            ${[
+                { label:'Customer',      value: customer         },
+                { label:'Route',         value: route            },
+                { label:'Cargo Type',    value: cargo            },
+                { label:'Weight',        value: '8.5 Tons'       },
+                { label:'Pickup Date',   value: 'Mar 12, 2026'   },
+                { label:'Delivery Date', value: 'Mar 15, 2026'   },
+                { label:'Truck',         value: 'TX-9901 (Volvo)'},
+                { label:'Driver',        value: 'Mark Wilson'    },
+            ].map(d => `
+                <div style="padding:12px;background:var(--bg-main);
+                    border-radius:10px;border:1px solid var(--border-color);">
+                    <div style="font-size:0.7rem;font-weight:700;
+                        color:var(--text-muted);text-transform:uppercase;
+                        letter-spacing:0.04em;margin-bottom:4px;">${d.label}</div>
+                    <div style="font-size:0.88rem;font-weight:600;">${d.value}</div>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- Timeline -->
+        <div style="font-size:0.78rem;font-weight:700;
+            text-transform:uppercase;letter-spacing:0.05em;
+            color:var(--text-muted);margin-bottom:12px;">
+            Shipment Timeline
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0;">
+            ${[
+                { done:true,  label:'Order Placed',         time:'Mar 12, 09:00 AM' },
+                { done:true,  label:'Truck Assigned',       time:'Mar 12, 10:30 AM' },
+                { done:true,  label:'Picked Up from NYC',   time:'Mar 13, 08:00 AM' },
+                { done:true,  label:'In Transit',           time:'Mar 13, 09:15 AM' },
+                { done:true,  label:'Delivered to Chicago', time:'Mar 15, 04:45 PM' },
+            ].map((step, i, arr) => `
+                <div style="display:flex;gap:12px;align-items:flex-start;
+                    padding-bottom:${i < arr.length-1 ? '16px' : '0'};">
+                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+                        <div style="width:22px;height:22px;border-radius:50%;
+                            background:${step.done ? 'var(--success)' : 'var(--border-color)'};
+                            color:white;display:flex;align-items:center;
+                            justify-content:center;flex-shrink:0;">
+                            <i data-lucide="${step.done ? 'check' : 'clock'}"
+                                style="width:12px;height:12px;"></i>
+                        </div>
+                        ${i < arr.length-1 ? `
+                        <div style="width:2px;flex:1;min-height:16px;
+                            background:${step.done ? 'var(--success)' : 'var(--border-color)'};
+                            margin-top:2px;opacity:0.3;">
+                        </div>` : ''}
+                    </div>
+                    <div style="padding-top:2px;">
+                        <div style="font-size:0.85rem;font-weight:${step.done ? '600' : '400'};
+                            color:${step.done ? 'var(--text-main)' : 'var(--text-muted)'};">
+                            ${step.label}
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">
+                            ${step.time}
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+},
     toggleMobileMenu() {
         const sidebar = document.querySelector('.sidebar');
         const overlay = document.querySelector('.sidebar-overlay');
@@ -188,11 +681,37 @@ window.addEventListener('resize', () => {
         lucide.createIcons();
     },
 
-    openModal(title, content) {
+    openModal(title, content, showFooter = true, submitLabel = 'Save Changes', onSubmit = null) {
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-content').innerHTML = content;
         document.getElementById('modal-container').classList.remove('hidden');
-        document.getElementById('modal-submit').style.display = '';
+
+        // Footer visibility
+        const footer = document.querySelector('.modal-footer');
+        footer.style.display = showFooter ? '' : 'none';
+
+        // Submit button label
+        const submitBtn = document.getElementById('modal-submit');
+        submitBtn.textContent = submitLabel;
+
+        // Submit action
+        submitBtn.onclick = onSubmit ? onSubmit : () => {
+            UI.showToast('Saved successfully!', 'success');
+            UI.closeModal();
+        };
+
+        // ── Reset any red borders when user interacts with fields ──
+    setTimeout(() => {
+        document.querySelectorAll('#modal-content input, #modal-content select, #modal-content textarea')
+            .forEach(el => {
+                el.addEventListener('input', () => {
+                    el.style.borderColor = '';
+                });
+                el.addEventListener('change', () => {
+                    el.style.borderColor = '';
+                });
+            });
+    }, 100);
     },
 
     closeModal() {
@@ -980,7 +1499,13 @@ const Views = {
                 </div>
                 <div class="table-actions">
                     <div class="search-bar"><input type="search" placeholder="Search partners..."></div>
-                    <button class="btn btn-primary" onclick="UI.openModal('Add Customer', Views.forms.customer())">
+                    <button class="btn btn-primary" onclick="UI.openModal(
+    'Add Customer',
+    Views.forms.customer(),
+    true,
+    '➕ Add Partner',
+    () => { UI.showToast('Customer added successfully!','success'); UI.closeModal(); }
+)">
                         <i data-lucide="plus"></i><span class="hide-mobile">Add Partner</span>
                     </button>
                 </div>
@@ -1026,60 +1551,69 @@ const Views = {
         </div>
     `,
 
-    orders: () => `
-        <div class="card">
-            <div class="table-header">
-                <div class="table-header-left">
-                    <h3>Booking Management</h3>
-                    <p>Monitor and dispatch new cargo bookings</p>
-                </div>
-                <div class="table-actions">
-                    <div class="search-bar"><input type="search" placeholder="Search orders..."></div>
-                    <button class="btn btn-primary" onclick="UI.openModal('New Booking', Views.forms.order())">
-                        <i data-lucide="plus"></i><span class="hide-mobile">New Booking</span>
-                    </button>
-                </div>
+orders: () => `
+    <div class="card">
+        <div class="table-header">
+            <div class="table-header-left">
+                <h3>Booking Management</h3>
+                <p>Monitor and dispatch new cargo bookings</p>
             </div>
-            <div class="table-container">
-                <table>
-                    <thead><tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th class="hide-mobile">Route</th>
-                        <th class="hide-mobile">Cargo</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr></thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>#ORD-7742</strong></td>
-                            <td>Tesla Motors</td>
-                            <td class="hide-mobile">Palo Alto → Austin</td>
-                            <td class="hide-mobile">Heavy Machinery</td>
-                            <td><span class="badge-status bg-pending">Pending</span></td>
-                            <td><button class="btn btn-primary btn-sm">Assign Truck</button></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#ORD-7741</strong></td>
-                            <td>SpaceX</td>
-                            <td class="hide-mobile">Hawthorne → Starbase</td>
-                            <td class="hide-mobile">Rocket Parts</td>
-                            <td><span class="badge-status bg-transit">In Transit</span></td>
-                            <td><button class="btn btn-secondary btn-sm">Track</button></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#ORD-7738</strong></td>
-                            <td>Apple Inc.</td>
-                            <td class="hide-mobile">NYC → Chicago</td>
-                            <td class="hide-mobile">Electronics</td>
-                            <td><span class="badge-status bg-delivered">Delivered</span></td>
-                            <td><button class="btn btn-secondary btn-sm">View</button></td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="table-actions">
+                <div class="search-bar"><input type="search" placeholder="Search orders..."></div>
+                <button class="btn btn-primary" onclick="UI.openModal('New Booking',Views.forms.order(),true,'🚚 Confirm Booking',() => UI.submitNewBooking())">
+                    <i data-lucide="plus"></i><span class="hide-mobile">New Booking</span>
+                </button>
             </div>
         </div>
-    `,
+        <div class="table-container">
+            <table>
+                <thead><tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th class="hide-mobile">Route</th>
+                    <th class="hide-mobile">Cargo</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>#ORD-7742</strong></td>
+                        <td>Tesla Motors</td>
+                        <td class="hide-mobile">Palo Alto → Austin</td>
+                        <td class="hide-mobile">Heavy Machinery</td>
+                        <td><span class="badge-status bg-pending">Pending</span></td>
+                        <td><button class="btn btn-primary btn-sm" 
+                            onclick="UI.openAssignTruck('ORD-7742','Tesla Motors','Palo Alto → Austin','Heavy Machinery')">
+                            <i data-lucide="truck"></i> Assign Truck
+                        </button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>#ORD-7741</strong></td>
+                        <td>SpaceX</td>
+                        <td class="hide-mobile">Hawthorne → Starbase</td>
+                        <td class="hide-mobile">Rocket Parts</td>
+                        <td><span class="badge-status bg-transit">In Transit</span></td>
+                        <td><button class="btn btn-secondary btn-sm"
+                            onclick="UI.openModal('Track Shipment', UI.trackingModalContent('SHP-1290','SpaceX','Hawthorne → Starbase'),false)">
+                            <i data-lucide="map-pin"></i> Track
+                        </button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>#ORD-7738</strong></td>
+                        <td>Apple Inc.</td>
+                        <td class="hide-mobile">NYC → Chicago</td>
+                        <td class="hide-mobile">Electronics</td>
+                        <td><span class="badge-status bg-delivered">Delivered</span></td>
+                        <td><button class="btn btn-secondary btn-sm"
+                            onclick="UI.openModal('Order Details', UI.orderDetailsContent('ORD-7738','Apple Inc.','NYC → Chicago','Electronics','Delivered'),false)">
+                            <i data-lucide="eye"></i> View
+                        </button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+`,
 
     shipments: () => `
         <div class="card">
@@ -1275,7 +1809,13 @@ const Views = {
                 </div>
                 <div class="table-actions">
                     <button class="btn btn-secondary" onclick="UI.showToast('Exporting...','success')"><i data-lucide="download"></i><span class="hide-mobile">Export</span></button>
-                    <button class="btn btn-primary" onclick="UI.openModal('New Invoice', Views.forms.invoice())"><i data-lucide="plus"></i><span class="hide-mobile">New Invoice</span></button>
+                    <button class="btn btn-primary" onclick="UI.openModal(
+    'New Invoice',
+    Views.forms.invoice(),
+    true,
+    '📄 Create Invoice',
+    () => { UI.showToast('Invoice created successfully!','success'); UI.closeModal(); }
+)"><i data-lucide="plus"></i><span class="hide-mobile">New Invoice</span></button>
                 </div>
             </div>
             <div class="table-container">
@@ -1365,7 +1905,13 @@ const Views = {
                 </div>
                 <div class="table-actions">
                     <div class="search-bar"><input type="search" placeholder="Search tickets..."></div>
-                    <button class="btn btn-primary" onclick="UI.openModal('New Support Ticket', Views.forms.ticket())">
+                    <button class="btn btn-primary" onclick="UI.openModal(
+    'New Support Ticket',
+    Views.forms.ticket(),
+    true,
+    '🎫 Submit Ticket',
+    () => { UI.showToast('Support ticket submitted!','success'); UI.closeModal(); }
+)">
                         <i data-lucide="plus"></i><span class="hide-mobile">New Ticket</span>
                     </button>
                 </div>
@@ -1660,56 +2206,60 @@ const Views = {
         `,
 
         order: () => `
-            <form id="add-order-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Customer / Client *</label>
-                        <select required>
-                            <option value="">Select customer...</option>
-                            <option>Tesla Motors</option>
-                            <option>SpaceX</option>
-                            <option>Apple Inc.</option>
-                            <option>Global Corp</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Cargo Type *</label>
-                        <select required>
-                            <option value="">Select cargo type...</option>
-                            <option>Heavy Machinery</option>
-                            <option>Electronics</option>
-                            <option>Perishables</option>
-                            <option>Hazardous Materials</option>
-                            <option>General Freight</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Origin City *</label>
-                        <input type="text" placeholder="e.g. Palo Alto, CA" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Destination City *</label>
-                        <input type="text" placeholder="e.g. Austin, TX" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Pickup Date *</label>
-                        <input type="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Weight (tons)</label>
-                        <input type="number" placeholder="0.00" min="0" step="0.1">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Special Instructions</label>
-                    <textarea placeholder="Fragile, temperature-controlled, etc."></textarea>
-                </div>
-            </form>
-        `,
+    <form id="add-order-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Customer / Client *</label>
+                <select id="order-customer" required>
+                    <option value="">Select customer...</option>
+                    <option>Tesla Motors</option>
+                    <option>SpaceX</option>
+                    <option>Apple Inc.</option>
+                    <option>Global Corp</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Cargo Type *</label>
+                <select id="order-cargo" required>
+                    <option value="">Select cargo type...</option>
+                    <option>Heavy Machinery</option>
+                    <option>Electronics</option>
+                    <option>Perishables</option>
+                    <option>Hazardous Materials</option>
+                    <option>General Freight</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Origin City *</label>
+                <input type="text" id="order-origin"
+                    placeholder="e.g. Palo Alto, CA" required>
+            </div>
+            <div class="form-group">
+                <label>Destination City *</label>
+                <input type="text" id="order-dest"
+                    placeholder="e.g. Austin, TX" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Pickup Date *</label>
+                <input type="date" id="order-date" required>
+            </div>
+            <div class="form-group">
+                <label>Weight (tons)</label>
+                <input type="number" id="order-weight"
+                    placeholder="0.00" min="0" step="0.1">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Special Instructions</label>
+            <textarea id="order-notes"
+                placeholder="Fragile, temperature-controlled, etc."></textarea>
+        </div>
+    </form>
+`,
 
         shipment: () => `
             <form id="add-shipment-form">
