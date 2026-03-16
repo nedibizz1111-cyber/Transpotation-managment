@@ -420,6 +420,102 @@ button {
 }
 
 /* ========================================
+   Profile Dropdown
+   ======================================== */
+#profile-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 280px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+    z-index: 500;
+    overflow: hidden;
+}
+
+#profile-dropdown.hidden {
+    display: none;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-radius: 0;
+}
+
+.profile-menu-item:hover {
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+.profile-logout:hover {
+    background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.profile-menu-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Status buttons */
+.status-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+}
+
+.status-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.status-online-active {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+
+.status-busy-active {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+.status-away-active {
+    background: rgba(148, 163, 184, 0.12) !important;
+    border-color: #94a3b8 !important;
+    color: #94a3b8 !important;
+}
+
+/* Mobile - make dropdown full width on small screens */
+@media (max-width: 480px) {
+    #profile-dropdown {
+        width: calc(100vw - 32px);
+        right: -16px;
+    }
+}
+
+/* ========================================
    Content Area
    ======================================== */
 .content-area {

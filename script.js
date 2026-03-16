@@ -90,6 +90,25 @@ const UI = {
             this.closeNotificationPanel();
         });
 
+        // User Profile Dropdown
+        const userProfile = document.querySelector('.user-profile');
+        if (userProfile) {
+            userProfile.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleProfileDropdown();
+            });
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                if (!e.target.closest('.user-profile')) {
+                    this.closeProfileDropdown();
+                }
+            }
+        });
+
         // Modal Close
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', () => this.closeModal());
@@ -173,6 +192,7 @@ window.addEventListener('resize', () => {
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-content').innerHTML = content;
         document.getElementById('modal-container').classList.remove('hidden');
+        document.getElementById('modal-submit').style.display = '';
     },
 
     closeModal() {
@@ -480,6 +500,339 @@ markAllRead() {
     if (label) label.textContent = '0 Unread';
 
     this.showToast('All notifications marked as read', 'success');
+},
+toggleProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (!dropdown) {
+        this.createProfileDropdown();
+    } else {
+        if (dropdown.classList.contains('hidden')) {
+            this.openProfileDropdown();
+        } else {
+            this.closeProfileDropdown();
+        }
+    }
+},
+
+createProfileDropdown() {
+    // Remove any existing one first
+    const existing = document.getElementById('profile-dropdown');
+    if (existing) existing.remove();
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'profile-dropdown';
+    dropdown.className = 'hidden';
+    dropdown.innerHTML = `
+        <!-- Arrow pointer -->
+        <div style="
+            position: absolute; top: -7px; right: 18px;
+            width: 14px; height: 14px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-color);
+            transform: rotate(45deg);
+            z-index: 1;">
+        </div>
+
+        <!-- Profile Header -->
+        <div style="
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(2,132,199,0.08), rgba(14,165,233,0.04));
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 14px 14px 0 0;
+            display: flex; align-items: center; gap: 12px;">
+            <img src="https://ui-avatars.com/api/?name=John+Doe&background=0284c7&color=fff"
+                style="width:44px; height:44px; border-radius:50%;
+                border: 2px solid rgba(2,132,199,0.3); flex-shrink:0;">
+            <div style="min-width:0;">
+                <div style="font-weight:700; font-size:0.92rem; color:var(--text-main);">
+                    John Doe
+                </div>
+                <div style="font-size:0.75rem; color:var(--primary); font-weight:600; margin-top:1px;">
+                    Administrator
+                </div>
+                <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px; 
+                    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    john.doe@swiftmove.com
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Items -->
+        <div style="padding: 8px 0;">
+
+            <!-- My Profile -->
+            <div class="profile-menu-item" onclick="UI.handleProfileAction('profile')">
+                <div class="profile-menu-icon" style="background:rgba(2,132,199,0.1);color:var(--primary);">
+                    <i data-lucide="user" style="width:15px;height:15px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem;font-weight:600;">My Profile</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">View & edit your details</div>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="profile-menu-item" onclick="UI.handleProfileAction('settings')">
+                <div class="profile-menu-icon" style="background:rgba(100,116,139,0.1);color:var(--secondary);">
+                    <i data-lucide="settings" style="width:15px;height:15px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem;font-weight:600;">Account Settings</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Preferences & security</div>
+                </div>
+            </div>
+
+            <!-- Switch Role -->
+            <div class="profile-menu-item" onclick="UI.handleProfileAction('role')">
+                <div class="profile-menu-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">
+                    <i data-lucide="shield-check" style="width:15px;height:15px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem;font-weight:600;">Role & Permissions</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Admin · Full access</div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="profile-menu-item" onclick="UI.handleProfileAction('activity')">
+                <div class="profile-menu-icon" style="background:rgba(16,185,129,0.1);color:var(--success);">
+                    <i data-lucide="activity" style="width:15px;height:15px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem;font-weight:600;">Activity Log</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Your recent actions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="height:1px; background:var(--border-color); margin: 0 16px;"></div>
+
+        <!-- Status Toggle -->
+        <div style="padding: 10px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);
+                text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
+                Status
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button onclick="UI.setUserStatus('online')" class="status-btn status-online" id="status-online">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                    Online
+                </button>
+                <button onclick="UI.setUserStatus('busy')" class="status-btn" id="status-busy">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>
+                    Busy
+                </button>
+                <button onclick="UI.setUserStatus('away')" class="status-btn" id="status-away">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block;"></span>
+                    Away
+                </button>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="height:1px; background:var(--border-color); margin: 0 16px;"></div>
+
+        <!-- Logout -->
+        <div style="padding: 8px 0 6px;">
+            <div class="profile-menu-item profile-logout" onclick="UI.handleProfileAction('logout')">
+                <div class="profile-menu-icon" style="background:rgba(239,68,68,0.1);color:var(--danger);">
+                    <i data-lucide="log-out" style="width:15px;height:15px;"></i>
+                </div>
+                <div>
+                    <div style="font-size:0.85rem;font-weight:600;color:var(--danger);">Sign Out</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">End your session</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version footer -->
+        <div style="padding: 8px 20px 12px;
+            font-size:0.7rem;color:var(--text-muted);
+            border-top:1px solid var(--border-color);
+            display:flex;justify-content:space-between;align-items:center;">
+            <span>SwiftMove ERP v2.1.0</span>
+            <span style="color:var(--success);font-weight:600;">● Live</span>
+        </div>
+    `;
+
+    // Append to header-right
+    const headerRight = document.querySelector('.header-right');
+    headerRight.style.position = 'relative';
+    headerRight.appendChild(dropdown);
+
+    lucide.createIcons();
+
+    // Open immediately after creating
+    requestAnimationFrame(() => this.openProfileDropdown());
+},
+
+openProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (!dropdown) return;
+    dropdown.classList.remove('hidden');
+    // Trigger animation
+    dropdown.style.opacity = '0';
+    dropdown.style.transform = 'translateY(-8px) scale(0.97)';
+    requestAnimationFrame(() => {
+        dropdown.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        dropdown.style.opacity = '1';
+        dropdown.style.transform = 'translateY(0) scale(1)';
+    });
+},
+
+closeProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (!dropdown) return;
+    dropdown.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+    dropdown.style.opacity = '0';
+    dropdown.style.transform = 'translateY(-8px) scale(0.97)';
+    setTimeout(() => {
+        if (dropdown) dropdown.classList.add('hidden');
+    }, 150);
+},
+
+handleProfileAction(action) {
+    this.closeProfileDropdown();
+    switch(action) {
+        case 'profile':
+            this.openModal('My Profile', `
+                <div style="text-align:center;padding:8px 0 24px;">
+                    <div style="position:relative;width:80px;height:80px;margin:0 auto 16px;">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&background=0284c7&color=fff"
+                            style="width:100%;height:100%;border-radius:50%;border:3px solid var(--primary);">
+                        <div style="position:absolute;bottom:2px;right:2px;
+                            width:18px;height:18px;background:var(--success);
+                            border-radius:50%;border:2px solid var(--bg-card);"></div>
+                    </div>
+                    <h3 style="font-size:1.1rem;">John Doe</h3>
+                    <p style="color:var(--primary);font-size:0.8rem;font-weight:600;margin-top:4px;">Administrator</p>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" value="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" value="Administrator" readonly style="opacity:0.7;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" value="john.doe@swiftmove.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" value="+1 555 000 1234">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" value="Operations & Logistics">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" placeholder="Leave blank to keep current">
+                </div>
+                <div style="margin-top:4px;">
+                    <button class="btn btn-primary" onclick="UI.showToast('Profile updated!','success');UI.closeModal()">
+                        Save Changes
+                    </button>
+                </div>
+            `);
+            break;
+        case 'settings':
+            this.navigate('settings');
+            break;
+        case 'role':
+            this.showToast('Role: Administrator — Full Access', 'success');
+            break;
+        case 'activity':
+            this.openModal('Recent Activity', `
+            <div style="display:flex;flex-direction:column;gap:0;">
+                ${[
+                    { icon:'log-in',    color:'#10b981', bg:'rgba(16,185,129,0.1)', action:'Logged in',                   detail:'Chrome · Windows',        time:'Just now'  },
+                    { icon:'settings',  color:'#0284c7', bg:'rgba(2,132,199,0.1)',  action:'Updated system settings',     detail:'Timezone changed',        time:'2 hrs ago' },
+                    { icon:'file-text', color:'#f59e0b', bg:'rgba(245,158,11,0.1)', action:'Generated Invoice #INV-99011', detail:'Apple Inc. · $12,400',   time:'5 hrs ago' },
+                    { icon:'truck',     color:'#8b5cf6', bg:'rgba(139,92,246,0.1)', action:'Assigned Truck #TX-9901',     detail:'Order #ORD-7742',         time:'Yesterday' },
+                    { icon:'users',     color:'#0ea5e9', bg:'rgba(14,165,233,0.1)', action:'Added new customer',          detail:'Mike Torres · FastFreight', time:'2 days ago' },
+                ].map(a => `
+                    <div style="display:flex;gap:14px;padding:14px 0;
+                        border-bottom:1px solid var(--border-color);align-items:flex-start;">
+                        <div style="width:36px;height:36px;min-width:36px;border-radius:50%;
+                            background:${a.bg};color:${a.color};
+                            display:flex;align-items:center;justify-content:center;">
+                            <i data-lucide="${a.icon}" style="width:16px;height:16px;"></i>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);">${a.action}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${a.detail}</div>
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;font-weight:600;">${a.time}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `);
+        lucide.createIcons();
+        document.getElementById('modal-submit').style.display = 'none';
+        break;
+        case 'logout':
+            this.openModal('Sign Out', `
+                <div style="text-align:center;padding:16px 0;">
+                    <div style="width:64px;height:64px;border-radius:50%;
+                        background:rgba(239,68,68,0.1);
+                        display:flex;align-items:center;justify-content:center;
+                        margin:0 auto 16px;">
+                        <i data-lucide="log-out" style="width:28px;height:28px;color:var(--danger);"></i>
+                    </div>
+                    <h3 style="font-size:1.1rem;margin-bottom:8px;">Sign Out?</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">
+                        You are signed in as <strong>John Doe</strong>.<br>
+                        Any unsaved changes will be lost.
+                    </p>
+                    <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;">
+                        <button class="btn btn-secondary" onclick="UI.closeModal()" style="min-width:100px;">
+                            Cancel
+                        </button>
+                        <button class="btn btn-danger" onclick="UI.confirmLogout()" style="min-width:100px;">
+                            <i data-lucide="log-out" style="width:15px;height:15px;"></i>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            `);
+            lucide.createIcons();
+            break;
+    }
+},
+
+setUserStatus(status) {
+    // Reset all buttons
+    ['online','busy','away'].forEach(s => {
+        const btn = document.getElementById(`status-${s}`);
+        if (btn) btn.classList.remove('status-online-active','status-busy-active','status-away-active');
+    });
+
+    // Set active
+    const activeBtn = document.getElementById(`status-${status}`);
+    if (activeBtn) activeBtn.classList.add(`status-${status}-active`);
+
+    const labels = { online: 'Online', busy: 'Busy', away: 'Away' };
+    this.showToast(`Status set to ${labels[status]}`, 'success');
+},
+
+confirmLogout() {
+    this.closeModal();
+    // Simulate logout with loading toast
+    this.showToast('Signing out...', 'success');
+    setTimeout(() => {
+        // In a real app this would redirect to login
+        // For demo just reload
+        this.showToast('Logged out successfully!', 'success');
+    }, 1000);
 },
     showToast(message, type = 'success') {
         const toast = document.createElement('div');
